@@ -1,9 +1,27 @@
-# agent-phone
+# on-phone
 
 Lets a running **Claude Code** session phone you on a SIP extension (Linphone over Tailscale), say
 something, listen to your spoken reply and get the transcript back as an MCP tool result, in the same
 session. The coding agent does all the reasoning; this project only provides speech in/out and call
-control. No extra LLM, no paid STT/TTS.
+control. No extra LLM, no paid STT/TTS. You can also **phone the agent**: dial 700 and your instruction lands in
+the running session.
+
+![How on-phone works: the agent calls you, and you call the agent](docs/how-it-works.svg)
+
+## Install with an AI agent
+
+Paste this into Claude Code (or any coding agent with a shell) on the Mac:
+
+```text
+Install https://github.com/cguldogan/on-phone on this Mac by following docs/AGENT_INSTALL.md in that repo
+exactly. Ask me before each step marked [ASK], never print or commit secrets, and never ring my real phones
+unless I say so.
+```
+
+[docs/AGENT_INSTALL.md](docs/AGENT_INSTALL.md) is the step-by-step runbook it follows: a check after every
+step, a confirmation before anything changes outside the repo, and secrets kept in files.
+
+### Architecture
 
 ```
  Android/iPhone (Linphone)                       Raspberry Pi (Tailscale 100.x.y.z)
@@ -41,6 +59,7 @@ speech/setup.sh                         # whisper.cpp (brew) + models (~2 GB) + 
 speech/install-launchd.sh               # whisper :8178 and Kokoro :8179 as launchd agents (127.0.0.1)
 docker compose up -d --build            # MCP server + audio bridge
 integrations/claude/install.sh 1001     # /on-phone, /off-phone, MCP registration, hooks (default ext 1001)
+tools/sip-test-client/deploy.sh         # optional: the 1099 test bot on the Pi
 bin/phone-doctor                        # check every hop; add `--call 1099` for a live test call
 ```
 
@@ -52,8 +71,9 @@ bin/phone-doctor                        # check every hop; add `--call 1099` for
 
 Undo it with `integrations/claude/uninstall.sh`.
 
-**Phones:** Linphone on Android is extension **1001** and the iPhone is **1002**, both provisioned by QR earlier. **1099** is a
-scripted test bot on the Pi for automated tests; don't give it to a person.
+**Phones:** each phone runs Linphone with its own extension (by default 1001 for Android and 1002 for iPhone). Use transport TCP,
+with the Pi's Tailscale IP as the domain; the SIP passwords are in the Pi's `~/asterisk/config/pjsip.conf`. **1099** is a
+scripted test bot on the Pi for automated tests (`tools/sip-test-client/deploy.sh`); don't give it to a person.
 
 ## Use
 

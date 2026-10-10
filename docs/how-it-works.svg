@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1250" width="1200" height="1250" role="img" aria-labelledby="t d">
+  <title id="t">on-phone: how it works</title>
+  <desc id="d">Sequence diagram. A: the Claude Code session calls you through the phone MCP server and Asterisk, speaks, listens and gets your reply as a tool result. B: you dial 700, the server takes your instruction and pushes it into the running session through a channel; the agent continues the same call.</desc>
+  <defs>
+    <style>
+      :root { --bg:#ffffff; --panel:#f6f8fa; --ink:#1f2328; --muted:#59636e; --line:#d1d9e0; --a:#2563eb; --a-soft:#eff5ff; --b:#0f9f6e; --b-soft:#ebfaf3; --warn:#9a6700; }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg:#0d1117; --panel:#161b22; --ink:#e6edf3; --muted:#9198a1; --line:#30363d; --a:#5b9cff; --a-soft:#14223a; --b:#34d399; --b-soft:#0f2a20; --warn:#d29922; }
+      }
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); }
+      .bg { fill: var(--bg); }
+      .panel { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; }
+      .net { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 5; }
+      .life { stroke: var(--line); stroke-width: 2; stroke-dasharray: 2 6; stroke-linecap: round; }
+      .h1 { font-size: 34px; font-weight: 700; }
+      .sub { font-size: 16px; fill: var(--muted); }
+      .who { font-size: 18px; font-weight: 700; }
+      .meta { font-size: 13px; fill: var(--muted); }
+      .lab { font-size: 14px; }
+      .strong { font-weight: 700; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+      .a { stroke: var(--a); stroke-width: 2.5; fill: none; }
+      .b { stroke: var(--b); stroke-width: 2.5; fill: none; }
+      .audio { stroke-dasharray: 7 5; }
+      .na { fill: var(--a); }
+      .nb { fill: var(--b); }
+      .num { font-size: 13px; font-weight: 700; fill: #ffffff; }
+      .sec-a { fill: var(--a-soft); }
+      .sec-b { fill: var(--b-soft); }
+      .tag-a { font-size: 17px; font-weight: 700; fill: var(--a); }
+      .tag-b { font-size: 17px; font-weight: 700; fill: var(--b); }
+      .chip { fill: var(--panel); stroke: var(--line); stroke-width: 1.2; }
+      .big { font-size: 22px; font-weight: 700; }
+      .warn { fill: var(--warn); font-size: 14px; font-weight: 600; }
+    </style>
+    <marker id="ha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--a)"/></marker>
+    <marker id="hb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--b)"/></marker>
+  </defs>
+
+  <rect class="bg" width="1200" height="1250"/>
+
+  <!-- header -->
+  <text class="h1" x="40" y="62">on-phone: how it works</text>
+  <text class="sub" x="40" y="92">Your Claude Code session phones you with results and questions, and you can phone it with instructions.</text>
+  <text class="sub" x="40" y="114">Self-hosted: Asterisk on a Raspberry Pi, speech on your Mac, everything inside your Tailscale network.</text>
+
+  <!-- participants -->
+  <rect class="net" x="22" y="140" width="876" height="128" rx="16"/>
+  <text class="meta" x="40" y="160">Tailscale network (WireGuard), never exposed to the internet</text>
+
+  <g>
+    <rect class="panel" x="40" y="172" width="220" height="84" rx="12"/>
+    <text class="who" x="150" y="202" text-anchor="middle">You</text>
+    <text class="meta" x="150" y="224" text-anchor="middle">Linphone on Android / iPhone</text>
+    <text class="meta" x="150" y="242" text-anchor="middle">SIP ext 1001 · 1002</text>
+
+    <rect class="panel" x="340" y="172" width="220" height="84" rx="12"/>
+    <text class="who" x="450" y="202" text-anchor="middle">Asterisk 20</text>
+    <text class="meta" x="450" y="224" text-anchor="middle">Raspberry Pi · Docker</text>
+    <text class="meta" x="450" y="242" text-anchor="middle">PJSIP · ARI · agent = ext 700</text>
+
+    <rect class="panel" x="640" y="172" width="220" height="84" rx="12"/>
+    <text class="who" x="750" y="202" text-anchor="middle">phone-mcp</text>
+    <text class="meta" x="750" y="224" text-anchor="middle">Mac · Docker · MCP server</text>
+    <text class="meta" x="750" y="242" text-anchor="middle">RTP bridge · VAD · sessions</text>
+
+    <rect class="panel" x="940" y="172" width="220" height="84" rx="12"/>
+    <text class="who" x="1050" y="202" text-anchor="middle">Claude Code</text>
+    <text class="meta" x="1050" y="224" text-anchor="middle">your session, after /on-phone</text>
+    <text class="meta" x="1050" y="242" text-anchor="middle">+ agent-phone-channel</text>
+  </g>
+
+  <!-- speech services, attached to phone-mcp -->
+  <rect class="chip" x="636" y="280" width="228" height="46" rx="10"/>
+  <text class="lab strong" x="750" y="299" text-anchor="middle">Speech (native, local)</text>
+  <text class="meta" x="750" y="317" text-anchor="middle">whisper.cpp STT · Kokoro TTS</text>
+
+  <!-- ===== A: the agent calls you ===== -->
+  <rect class="sec-a" x="22" y="344" width="1156" height="356" rx="16" opacity="0.85"/>
+  <rect class="sec-b" x="22" y="716" width="1156" height="350" rx="16" opacity="0.85"/>
+  <!-- lifelines -->
+  <line class="life" x1="150" y1="256" x2="150" y2="1050"/>
+  <line class="life" x1="450" y1="256" x2="450" y2="1050"/>
+  <line class="life" x1="750" y1="326" x2="750" y2="1050"/>
+  <line class="life" x1="1050" y1="256" x2="1050" y2="1050"/>
+
+  <text class="tag-a" x="40" y="372">A · The agent calls you</text>
+  <text class="meta" x="250" y="372">when the task is done, it's blocked, or it needs a decision</text>
+
+  <!-- 1 -->
+  <line class="a" x1="1046" y1="410" x2="758" y2="410" marker-end="url(#ha)"/>
+  <circle class="na" cx="1028" cy="392" r="11"/><text class="num" x="1028" y="397" text-anchor="middle">1</text>
+  <text class="lab" x="902" y="398" text-anchor="middle"><tspan class="mono">phone_call(reason)</tspan></text>
+  <!-- 2 -->
+  <line class="a" x1="746" y1="450" x2="458" y2="450" marker-end="url(#ha)"/>
+  <circle class="na" cx="728" cy="432" r="11"/><text class="num" x="728" y="437" text-anchor="middle">2</text>
+  <text class="lab" x="600" y="438" text-anchor="middle">ARI originate</text>
+  <!-- 3 -->
+  <line class="a" x1="446" y1="490" x2="158" y2="490" marker-end="url(#ha)"/>
+  <circle class="na" cx="428" cy="472" r="11"/><text class="num" x="428" y="477" text-anchor="middle">3</text>
+  <text class="lab" x="300" y="478" text-anchor="middle">rings as “Coding Agent” &lt;700&gt;</text>
+  <!-- 4 -->
+  <line class="a" x1="1046" y1="540" x2="758" y2="540" marker-end="url(#ha)"/>
+  <circle class="na" cx="1028" cy="522" r="11"/><text class="num" x="1028" y="527" text-anchor="middle">4</text>
+  <text class="lab" x="902" y="528" text-anchor="middle"><tspan class="mono">phone_speak_and_listen</tspan></text>
+  <!-- 5 audio out -->
+  <line class="a audio" x1="746" y1="580" x2="158" y2="580" marker-end="url(#ha)"/>
+  <circle class="na" cx="728" cy="562" r="11"/><text class="num" x="728" y="567" text-anchor="middle">5</text>
+  <text class="lab" x="450" y="568" text-anchor="middle">Kokoro speaks the text · G.722 RTP audio · you can interrupt</text>
+  <!-- 6 audio in -->
+  <line class="a audio" x1="154" y1="620" x2="742" y2="620" marker-end="url(#ha)"/>
+  <circle class="na" cx="172" cy="602" r="11"/><text class="num" x="172" y="607" text-anchor="middle">6</text>
+  <text class="lab" x="450" y="608" text-anchor="middle">your reply → Silero VAD finds the end → whisper.cpp transcribes</text>
+  <!-- 7 -->
+  <line class="a" x1="754" y1="660" x2="1042" y2="660" marker-end="url(#ha)"/>
+  <circle class="na" cx="772" cy="642" r="11"/><text class="num" x="772" y="647" text-anchor="middle">7</text>
+  <text class="lab strong" x="898" y="648" text-anchor="middle">transcript = tool result</text>
+  <text class="meta" x="1050" y="688" text-anchor="middle">acts on it in the same context</text>
+
+  <!-- ===== B: you call the agent ===== -->
+  <text class="tag-b" x="40" y="744">B · You call the agent</text>
+  <text class="meta" x="245" y="744">works even when the session is idle at its prompt</text>
+
+  <!-- 1 -->
+  <line class="b" x1="154" y1="782" x2="442" y2="782" marker-end="url(#hb)"/>
+  <circle class="nb" cx="172" cy="764" r="11"/><text class="num" x="172" y="769" text-anchor="middle">1</text>
+  <text class="lab" x="300" y="770" text-anchor="middle">dial <tspan class="strong">700</tspan></text>
+  <!-- 2 -->
+  <line class="b" x1="454" y1="822" x2="742" y2="822" marker-end="url(#hb)"/>
+  <circle class="nb" cx="472" cy="804" r="11"/><text class="num" x="472" y="809" text-anchor="middle">2</text>
+  <text class="lab" x="610" y="810" text-anchor="middle"><tspan class="mono">Stasis(agentphone,inbound)</tspan></text>
+  <!-- 3 -->
+  <line class="b audio" x1="746" y1="862" x2="158" y2="862" marker-end="url(#hb)"/>
+  <circle class="nb" cx="728" cy="844" r="11"/><text class="num" x="728" y="849" text-anchor="middle">3</text>
+  <text class="lab" x="450" y="850" text-anchor="middle">“Coding agent for &lt;project&gt;. What would you like me to do?”</text>
+  <!-- 4 -->
+  <line class="b audio" x1="154" y1="902" x2="742" y2="902" marker-end="url(#hb)"/>
+  <circle class="nb" cx="172" cy="884" r="11"/><text class="num" x="172" y="889" text-anchor="middle">4</text>
+  <text class="lab" x="450" y="890" text-anchor="middle">your instruction → transcript (call stays open)</text>
+  <!-- 5 -->
+  <line class="b" x1="754" y1="942" x2="1042" y2="942" marker-end="url(#hb)"/>
+  <circle class="nb" cx="772" cy="924" r="11"/><text class="num" x="772" y="929" text-anchor="middle">5</text>
+  <text class="lab" x="898" y="930" text-anchor="middle">SSE → channel wakes session</text>
+  <!-- 6 -->
+  <line class="b audio" x1="1046" y1="992" x2="158" y2="992" marker-end="url(#hb)"/>
+  <circle class="nb" cx="1028" cy="974" r="11"/><text class="num" x="1028" y="979" text-anchor="middle">6</text>
+  <text class="lab" x="600" y="980" text-anchor="middle">continues the same call: reads back what it heard, waits for a clear “yes”, acts, calls back</text>
+  <text class="meta" x="600" y="1030" text-anchor="middle">Several sessions listening? It asks which project. None listening? It says so and hangs up.</text>
+
+  <!-- ===== numbers ===== -->
+  <g>
+    <rect class="chip" x="40" y="1086" width="262" height="76" rx="12"/>
+    <text class="big" x="60" y="1120">≈ 0.3 s</text>
+    <text class="meta" x="60" y="1144">text → first spoken word</text>
+
+    <rect class="chip" x="322" y="1086" width="262" height="76" rx="12"/>
+    <text class="big" x="342" y="1120">≈ 1.9 s</text>
+    <text class="meta" x="342" y="1144">you stop talking → transcript</text>
+
+    <rect class="chip" x="604" y="1086" width="262" height="76" rx="12"/>
+    <text class="big" x="624" y="1120">0.6 s</text>
+    <text class="meta" x="624" y="1144">of speech interrupts the agent</text>
+
+    <rect class="chip" x="886" y="1086" width="274" height="76" rx="12"/>
+    <text class="big" x="906" y="1120">0 cloud</text>
+    <text class="meta" x="906" y="1144">STT, TTS and telephony run at home</text>
+  </g>
+  <text class="warn" x="40" y="1200">Safety: only your extensions · a secret token per session · never redials on no-answer</text>
+  <text class="warn" x="40" y="1224">A spoken “yes” never approves a permission prompt · silence is never consent · read-back before consequential actions</text>
+</svg>
