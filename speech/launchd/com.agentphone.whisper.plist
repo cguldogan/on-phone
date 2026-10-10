@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.agentphone.whisper</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/whisper-server</string>
+    <string>-m</string><string>__ROOT__/models/ggml-large-v3-turbo.bin</string>
+    <string>--host</string><string>127.0.0.1</string>
+    <string>--port</string><string>8178</string>
+    <string>-l</string><string>en</string>
+    <string>-t</string><string>4</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>StandardOutPath</key><string>__LOGS__/whisper.log</string>
+  <key>StandardErrorPath</key><string>__LOGS__/whisper.log</string>
+</dict>
+</plist>

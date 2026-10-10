@@ -1,0 +1,4 @@
+#!/bin/zsh
+# Start Claude Code with the agent-phone channel, so you can phone in to this session (extension 700)
+# after turning on phone mode with /on-phone. Claude Code shows a development-channel warning once per start.
+exec claude --dangerously-load-development-channels server:agent-phone-channel "$@"

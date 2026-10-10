@@ -1,0 +1,8 @@
+.venv
+**/.venv
+models/*.bin
+models/kokoro*
+models/voices*
+**/__pycache__
+.env
+**/.pytest_cache

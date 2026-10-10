@@ -1,0 +1,5 @@
+#!/bin/zsh
+# Diagnose the agent-phone stack: Tailscale, Asterisk/ARI + SIP registrations, Docker MCP, speech services,
+# launchd, Claude Code integration.  Optional live call:  phone-doctor --call 1099 ["text"]
+ROOT=${0:A:h:h}
+exec arch -arm64 uv run -q --project $ROOT/server python $ROOT/tools/doctor.py "$@"

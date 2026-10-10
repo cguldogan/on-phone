@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+"""Claude Code hook bridge for agent-phone.  Usage: agent-phone-hook stop|notify  (hook JSON on stdin)
+
+stop:   prints the server's Stop decision ({} or {"decision": "block", "reason": ...}).
+notify: fire-and-forget; the server places a short announce call for permission prompts.
+Never blocks Claude Code on errors: if the phone server is down, it prints {} and exits 0.
+"""
+import json
+import os
+import sys
+import urllib.request
+
+BASE = os.environ.get("AGENT_PHONE_URL", "http://127.0.0.1:8765")
+TOKEN_FILE = os.path.expanduser(os.environ.get("AGENT_PHONE_TOKEN_FILE", "~/.config/agent-phone/token"))
+
+
+def main() -> None:
+    kind = sys.argv[1] if len(sys.argv) > 1 else "stop"
+    try:
+        payload = sys.stdin.read()
+        with open(TOKEN_FILE) as f:
+            token = f.read().strip()
+        req = urllib.request.Request(f"{BASE}/hooks/claude/{kind}", data=payload.encode(), method="POST",
+                                     headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            out = json.loads(r.read() or b"{}")
+    except Exception:  # noqa: BLE001 - phone problems must never break the coding session
+        out = {}
+    if kind == "stop" and out.get("decision") == "block":
+        print(json.dumps({"decision": "block", "reason": out["reason"]}))
+
+
+if __name__ == "__main__":
+    main()

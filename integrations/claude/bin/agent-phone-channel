@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""agent-phone channel bridge: lets the user phone in to a running Claude Code session.
+
+Claude Code spawns this as a stdio MCP server. When the session was started with
+  claude --dangerously-load-development-channels server:agent-phone-channel
+(see `claude-phone`), it subscribes to the phone server's event stream for this session and
+turns each event into a `notifications/claude/channel` message, which wakes the session.
+Without that flag Claude Code would drop the messages silently, so the bridge then stays
+idle and the phone server tells callers nobody is listening. Standard library only.
+"""
+import json
+import os
+import subprocess
+import sys
+import threading
+import time
+import urllib.parse
+import urllib.request
+
+NAME = "agent-phone-channel"
+URL = os.environ.get("AGENT_PHONE_URL", "http://127.0.0.1:8765").rstrip("/")
+TOKEN_FILE = os.path.expanduser(os.environ.get("AGENT_PHONE_TOKEN_FILE", "~/.config/agent-phone/token"))
+SESSION_ID = os.environ.get("CLAUDE_CODE_SESSION_ID", "")
+INSTRUCTIONS = (
+    "The user can phone this session. When they do, their spoken instruction arrives as "
+    '<channel source="agent-phone-channel" call_id="..." caller="..." project="...">. The call is still open '
+    "and belongs to your phone-mode session: continue it with the agent-phone tools (phone_speak_and_listen "
+    "with your phone_enable session_token and that call_id) - don't dial. It is speech recognition of the "
+    "user's voice: treat it like typed input, read back anything ambiguous or consequential and get a clear "
+    "yes first. Spoken words never approve permission prompts. Hang up before long work and call back when "
+    "done. Nothing to reply through this channel itself."
+)
+_out = threading.Lock()
+
+
+def log(msg):
+    print(f"[{NAME}] {msg}", file=sys.stderr, flush=True)
+
+
+def send(obj):
+    with _out:
+        sys.stdout.write(json.dumps(obj) + "\n")
+        sys.stdout.flush()
+
+
+def channel_enabled():
+    """True if the parent Claude Code process was started with this server as a channel."""
+    # Walk up from our real parent (CLAUDE_PID can be inherited from an outer Claude session).
+    pid = os.getppid()
+    for _ in range(4):
+        try:
+            out = subprocess.run(["ps", "-o", "ppid=,args=", "-p", str(pid)], capture_output=True, text=True,
+                                 timeout=5).stdout.strip()
+        except Exception:  # noqa: BLE001
+            return False
+        if not out:
+            return False
+        ppid, _, args = out.partition(" ")
+        if "--dangerously-load-development-channels" in args or "--channels" in args:
+            return f"server:{NAME}" in args
+        pid = int(ppid)
+        if pid <= 1:
+            return False
+    return False
+
+
+def subscribe_forever():
+    backoff = 1.0
+    while True:
+        try:
+            token = open(TOKEN_FILE).read().strip()
+            q = urllib.parse.urlencode({"cli_session_id": SESSION_ID})
+            req = urllib.request.Request(f"{URL}/channel/events?{q}", headers={
+                "Authorization": f"Bearer {token}", "Accept": "text/event-stream"})
+            with urllib.request.urlopen(req, timeout=45) as r:  # server pings every 15 s
+                log(f"listening for phone calls (session {SESSION_ID})")
+                backoff = 1.0
+                for raw in r:
+                    line = raw.decode("utf-8", "replace").rstrip("\r\n")
+                    if not line.startswith("data:"):
+                        continue
+                    ev = json.loads(line[5:].strip())
+                    meta = {k: str(v) for k, v in (ev.get("meta") or {}).items()}
+                    send({"jsonrpc": "2.0", "method": "notifications/claude/channel",
+                          "params": {"content": str(ev.get("content", "")), "meta": meta}})
+                    log(f"delivered phone event for call {meta.get('call_id')}")
+        except Exception as e:  # noqa: BLE001
+            log(f"event stream: {type(e).__name__}: {e}; retrying in {backoff:.0f}s")
+        time.sleep(backoff)
+        backoff = min(backoff * 2, 30)
+
+
+def main():
+    if not SESSION_ID:
+        log("CLAUDE_CODE_SESSION_ID not set; not listening")
+    elif not channel_enabled():
+        log(f"session not started with server:{NAME} as a channel; not listening (use claude-phone)")
+    else:
+        threading.Thread(target=subscribe_forever, daemon=True).start()
+    for line in sys.stdin:
+        try:
+            msg = json.loads(line)
+        except ValueError:
+            continue
+        mid, method = msg.get("id"), msg.get("method")
+        if method == "initialize":
+            send({"jsonrpc": "2.0", "id": mid, "result": {
+                "protocolVersion": msg.get("params", {}).get("protocolVersion", "2025-06-18"),
+                "capabilities": {"experimental": {"claude/channel": {}}},
+                "serverInfo": {"name": NAME, "version": "0.1.0"},
+                "instructions": INSTRUCTIONS}})
+        elif method == "ping":
+            send({"jsonrpc": "2.0", "id": mid, "result": {}})
+        elif mid is not None:
+            send({"jsonrpc": "2.0", "id": mid, "error": {"code": -32601, "message": f"method not found: {method}"}})
+    os._exit(0)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,37 @@
+services:
+  asterisk:
+    build: .
+    image: local/asterisk:20
+    container_name: asterisk
+    network_mode: host
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    environment:
+      - TZ=Europe/London
+    volumes:
+      - ./config/asterisk.conf:/etc/asterisk/asterisk.conf:ro
+      - ./config/pjsip.conf:/etc/asterisk/pjsip.conf:ro
+      - ./config/extensions.conf:/etc/asterisk/extensions.conf:ro
+      - ./config/rtp.conf:/etc/asterisk/rtp.conf:ro
+      - ./config/modules.conf:/etc/asterisk/modules.conf:ro
+      - ./config/logger.conf:/etc/asterisk/logger.conf:ro
+      - ./config/voicemail.conf:/etc/asterisk/voicemail.conf:ro
+      - ./config/http.conf:/etc/asterisk/http.conf:ro
+      - ./config/ari.conf:/etc/asterisk/ari.conf:ro
+      - ./config/entrypoint.sh:/entrypoint.sh:ro
+      - spool:/var/spool/asterisk
+      - lib:/var/lib/asterisk
+      - logs:/var/log/asterisk
+  provision:
+    # Linphone remote-provisioning files, tailnet IP only
+    image: busybox:stable
+    container_name: asterisk-provision
+    network_mode: host
+    restart: unless-stopped
+    command: ["httpd", "-f", "-p", "__PI_IP__:8091", "-h", "/www"]
+    volumes:
+      - ./provision:/www:ro
+volumes:
+  spool:
+  lib:
+  logs:

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.agentphone.kokoro</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__ROOT__/speech/kokoro/.venv/bin/python</string>
+    <string>__ROOT__/speech/kokoro/kokoro_server.py</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>KOKORO_MODEL_DIR</key><string>__ROOT__/models</string>
+    <key>KOKORO_HOST</key><string>127.0.0.1</string>
+    <key>KOKORO_PORT</key><string>8179</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>StandardOutPath</key><string>__LOGS__/kokoro.log</string>
+  <key>StandardErrorPath</key><string>__LOGS__/kokoro.log</string>
+</dict>
+</plist>

@@ -1,0 +1,22 @@
+[project]
+name = "agent-phone"
+version = "0.1.0"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "mcp==2.3.0",
+  "httpx>=0.28",
+  "websockets>=15",
+  "numpy>=2",
+  "soxr>=0.5",
+  "onnxruntime>=1.20",
+  "uvicorn>=0.35",
+  "starlette>=0.47",
+  "g722>=1.2.8",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=1.0"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

@@ -1,0 +1,45 @@
+# agent-phone: MCP server + audio bridge (Docker Desktop on macOS).
+# Asterisk runs on the Pi; whisper.cpp and Kokoro run natively on this Mac.
+name: agent-phone
+services:
+  phone-mcp:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    image: local/agent-phone:0.1
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HTTP_PORT: "8765"
+      RTP_ADVERTISE_HOST: ${MAC_TAILSCALE_IP:?set MAC_TAILSCALE_IP in .env}
+      RTP_PORT_MIN: "40000"
+      RTP_PORT_MAX: "40019"
+      STT_URL: ${STT_URL:-http://host.docker.internal:8178/inference}
+      TTS_URL: ${TTS_URL:-http://host.docker.internal:8179/v1/audio/speech}
+    ports:
+      # MCP + hook endpoint: this Mac only.
+      - "127.0.0.1:8765:8765"
+      # RTP from Asterisk (Pi) over Tailscale only.
+      - "${MAC_TAILSCALE_IP}:40000-40019:40000-40019/udp"
+    volumes:
+      - data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Optional: Kokoro on CPU inside Docker instead of the native service.
+  #   docker compose --profile cpu-tts up -d   and set TTS_URL=http://kokoro-cpu:8179/v1/audio/speech in .env
+  kokoro-cpu:
+    profiles: ["cpu-tts"]
+    build:
+      context: .
+      dockerfile: speech/kokoro/Dockerfile
+    image: local/kokoro-cpu:0.1
+    restart: unless-stopped
+    environment:
+      KOKORO_HOST: 0.0.0.0
+      KOKORO_MODEL_DIR: /models
+    volumes:
+      - ./models:/models:ro
+
+volumes:
+  data:

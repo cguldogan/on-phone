@@ -1,0 +1,91 @@
+; Only accept SIP from the tailnet (CGNAT 100.64/10) and localhost.
+; Add "permit=192.168.0.0/16" here to also allow LAN phones.
+[tailnet_only]
+type=acl
+deny=0.0.0.0/0.0.0.0
+permit=100.64.0.0/10
+permit=127.0.0.1/32
+
+[transport-udp]
+type=transport
+protocol=udp
+bind=0.0.0.0:5060
+
+[transport-tcp]
+type=transport
+protocol=tcp
+bind=0.0.0.0:5060
+
+; ---- shared phone template ----
+[phone](!)
+type=endpoint
+context=internal
+disallow=all
+allow=opus,g722,ulaw,alaw
+direct_media=no
+rtp_symmetric=yes
+force_rport=yes
+rewrite_contact=yes
+dtmf_mode=rfc4733
+
+[auth](!)
+type=auth
+auth_type=userpass
+
+[aor](!)
+type=aor
+max_contacts=3
+remove_existing=yes
+qualify_frequency=60
+qualify_timeout=10   ; phones asleep or on a DERP relay can take seconds to answer OPTIONS
+
+; ---- extensions ----
+[1001](phone)
+auth=1001
+aors=1001
+callerid="Ext 1001" <1001>
+mailboxes=1001@default
+[1001](auth)
+username=1001
+password=__PW_1001__
+[1001](aor)
+
+[1002](phone)
+auth=1002
+aors=1002
+callerid="Ext 1002" <1002>
+mailboxes=1002@default
+[1002](auth)
+username=1002
+password=__PW_1002__
+[1002](aor)
+
+[1003](phone)
+auth=1003
+aors=1003
+callerid="Ext 1003" <1003>
+mailboxes=1003@default
+[1003](auth)
+username=1003
+password=__PW_1003__
+[1003](aor)
+
+[1004](phone)
+auth=1004
+aors=1004
+callerid="Ext 1004" <1004>
+mailboxes=1004@default
+[1004](auth)
+username=1004
+password=__PW_1004__
+[1004](aor)
+
+; ---- 1099: automated test client (scripted pjsua on this Pi). Not for humans. ----
+[1099](phone)
+auth=1099
+aors=1099
+callerid="Test bot" <1099>
+[1099](auth)
+username=1099
+password=__PW_1099__
+[1099](aor)
