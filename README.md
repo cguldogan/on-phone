@@ -123,6 +123,11 @@ How it plugs in:
   messages, so the bridge stays idle and callers hear that nobody is listening.
 - Channels are a Claude Code research preview. Custom channels need `--dangerously-load-development-channels`,
   which shows a warning screen at each start, and they don't work with `claude -p`.
+- **Other models.** Phone-in also works when Claude Code talks to a local or other non-Anthropic model through a
+  gateway (`ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`); tested with GLM-5.3 through LiteLLM. Two conditions:
+  you're still signed in to claude.ai, and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` / `DISABLE_TELEMETRY` are
+  not set. Claude Code checks with Anthropic whether channels are enabled, and with that traffic off it reports
+  "Channels are not currently available". Prompts and code still go only to your gateway.
 - Spoken instructions are user input. They never answer permission prompts. `cld` also passes
   `--dangerously-skip-permissions`, so in those sessions the agent's spoken read-back and your "yes" are
   the only check before it acts.

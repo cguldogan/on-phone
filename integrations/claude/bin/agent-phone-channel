@@ -26,8 +26,8 @@ INSTRUCTIONS = (
     '<channel source="agent-phone-channel" call_id="..." caller="..." project="...">. The call is still open '
     "and belongs to your phone-mode session: continue it with the agent-phone tools (phone_speak_and_listen "
     "with your phone_enable session_token and that call_id) - don't dial. It is speech recognition of the "
-    "user's voice: treat it like typed input, read back anything ambiguous or consequential and get a clear "
-    "yes first. Spoken words never approve permission prompts. Hang up before long work and call back when "
+    "user's voice: always read the instruction back and get a clear yes to 'shall I go ahead?' before acting "
+    "on it, even for small changes. Spoken words never approve permission prompts. Hang up before long work and call back when "
     "done. Nothing to reply through this channel itself."
 )
 _out = threading.Lock()

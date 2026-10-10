@@ -135,8 +135,10 @@ class InboundDesk:
         content = (
             f'The user phoned in from extension {caller} for project "{sess.project_label}" and said: "{text}"\n'
             f"The call is still open, waiting for you: call_id {call.id}. Continue it with phone_speak_and_listen "
-            f"(your phone_enable session_token, call_id {call.id}). This is speech recognition: read back your "
-            "understanding and get a clear yes before anything consequential, then act on it. Before long work, "
+            f"(your phone_enable session_token, call_id {call.id}). This is speech recognition, so ALWAYS confirm "
+            "first, even for small changes: your first phone_speak_and_listen reads back what you understood and "
+            "asks whether to go ahead. Act only after a clear yes to that question; anything else means ask again "
+            "or don't act. Before long work, "
             "say you'll call back and phone_hangup. If the call has already ended, phone_call them back when you "
             "have something to say.")
         meta = {"call_id": call.id, "caller": caller, "project": sess.project_label}

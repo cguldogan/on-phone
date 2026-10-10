@@ -52,8 +52,9 @@ The user is leaving the keyboard. Turn phone mode on now, then carry on with wha
 If the session was started with `claude-phone`, the user can call extension 700 and talk to you. Their
 instruction arrives as a `<channel source="agent-phone-channel" call_id=...>` message while that call is
 still open. Don't `phone_call`: continue the open call with `phone_speak_and_listen(session_token, call_id)`.
-Confirm what you understood ("You want me to ... - shall I go ahead?"), act only on a clear yes, then hang
-up before long work and call back with the result. If the call already ended, call back when you have news.
+**Always confirm before acting, even for small changes:** your first `phone_speak_and_listen` reads back
+what you understood ("You want me to ... Shall I go ahead?"). Act only on a clear yes to that question, then
+hang up before long work and call back with the result. If the call already ended, call back when you have news.
 
 ## Outcomes
 - `no_answer`, `busy`, `rejected`, `unavailable`: do **not** redial automatically. Continue only with safe,

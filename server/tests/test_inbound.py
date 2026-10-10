@@ -119,3 +119,14 @@ async def test_caller_already_on_agent_call_gets_busy():
     await until(lambda: "in-6" in tel.hungup)
     assert "in-6" not in tel.answered
     await mgr.hangup(mgr.calls[snap["call_id"]])
+
+
+def test_channel_bridge_compiles_on_system_python():
+    """The bridge runs on macOS's /usr/bin/python3 (3.9) with no dependencies; a syntax error kills phone-in."""
+    import pathlib
+    import shutil
+    import subprocess
+    bridge = pathlib.Path(__file__).resolve().parents[2] / "integrations/claude/bin/agent-phone-channel"
+    compile(bridge.read_text(), str(bridge), "exec")
+    if shutil.which("/usr/bin/python3"):
+        subprocess.run(["/usr/bin/python3", "-c", f"import ast; ast.parse(open({str(bridge)!r}).read())"], check=True)
